@@ -3,10 +3,12 @@
         <link rel="stylesheet" href="styles3.css">
         <!-- Compiled and minified CSS -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-
-        <!-- Compiled and minified JavaScript -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+        <!-- JS for Axios -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+        <!-- Compiled and minified JavaScript -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
         <title>Covid-dashboard</title>
     </head>
     <body>
@@ -20,7 +22,9 @@
               </ul>
             </div>
           </nav>
-          <div class="row">
+        <div class="row"></div>
+
+
           <div class="col s12 m6">
             <div class="card #26a69a teal lighten-1">
               <div class="card-content white-text">
@@ -30,19 +34,25 @@
               </div>
               <div id= "list"></div>
 
+              <div class="col s12 m6">
+                <div class="card #26a69a teal lighten-1">
+                  <div class="card-content white-text">
+                    <span class="card-title" style= "font-family: Arial;">deaths</span>
+                    <p style= "font-family: Arial;">Top ten countries with the most deaths.</p>
+                  </div>
+                  <div id= "lists"></div>
 
+
+
+              <div class="col s12 m6">
+                <div class="card #26a69a teal lighten-1 white-text">
+                  <div class="card-content">
+                    <span class="card-title">Card Title</span>
+                    <div id="map" style="width:100%; height:65%;"></div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-        <div class="col s12 m6" style= "background-color: #03a9f4 light-blue;">
-          <div class="card">
-            <div class="card-content">
-              <span class="card-title">Covid map</span>
-              <div id="map" style="width:50%; height:65%;"></div>
-            </div>
-          </div>
-        </div>
+
 
       </div>
 
@@ -57,14 +67,35 @@
         })
         console.log(response.data.data);
         pushdata(response);
+        pushmap(response);
       })
-      var map = L.map('map').setView([43.8828, 79.4403], 13);
+      axios.get("https://www.trackcorona.live/api/countries").then(response => {
+        console.log(response);
+        response.data.data.sort(function(a,b) {
+          return b.dead - a.dead;
+        })
+        console.log(response.data.data);
+        pushdata2(response);
+      })
+      function pushmap(response) {
+        var map = L.map('map').setView([51.5, -0.09], 5);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-      L.marker([43.8828, 79.4403]).addTo(map)
-      .bindPopup('<h1>A pretty CSS3 popup.</h1> Easily customizable.')
-      .openPopup();
+        //L.marker([51.5, -0.09]).addTo(map)
+        //.bindPopup('<h1>A pretty CSS3 popup.</h1> Easily customizable.')
+        //.openPopup();
+        var data = response.data.data;
+
+        for (var i=0; i<data.length; i++) {
+          var myradius = data[i].confirmed/20;
+          var popup = data[i].location + "<br>" + data[i].confirmed;
+
+          L.circle([data[i].latitude, data[i].longitude],{color: "red", radius:myradius}).bindPopup(popup).addTo(map);
+
+
+        }
+      }
       function pushdata(response) {
         var divHandle = document.getElementById("list");
         var myHTML = "<ul class='collection'>";
@@ -75,6 +106,17 @@
         divHandle.innerHTML = myHTML;
 
       }
+      function pushdata2(response) {
+        var divHandle = document.getElementById("lists");
+        var myHTML = "<ul class='collection'>";
+        for(var i = 0; i<10; i++) {
+          myHTML = myHTML + "<li class= 'collection-item'>" + response.data.data[i].location + "<li>"
+        }
+        myHTML = myHTML + "</ul>";
+        divHandle.innerHTML = myHTML;
+
+      }
+
     </script>
 
 </html>
